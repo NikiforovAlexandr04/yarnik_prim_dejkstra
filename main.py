@@ -1,10 +1,9 @@
 class Node:
     def __init__(self, number):
         self.number = number
-        self.color = 0
         self.next = []
-        self.visited = False
-        self.min_next = []
+        self.previous = 0
+        self.final_next = []
 
 
 def read_data():
@@ -30,31 +29,41 @@ def read_data():
 
 
 def min_ost(nodes):
-    t = 0
-    used = [nodes[0].number]
+    d = []
+    additional_d = []
+    for i in range(len(nodes)):
+        d.append(32768)
+        additional_d.append(32768)
+    d[0] = 0
+    used = [nodes[0]]
     while len(used) != len(nodes):
-        m = 32768
-        n = 0
-        current = 0
-        for node in used:
-            for dist in nodes[node].next:
-                if int(dist[1]) < m and dist[0].number not in used:
-                    m = int(dist[1])
-                    n = dist[0]
-                    current = node
-        n.min_next.append(current)
-        nodes[current].min_next.append(n.number)
-        t += m
-        used.append(n.number)
-    return t
+        current = used[len(used)-1]
+        for dist in current.next:
+            if int(dist[1]) < d[dist[0].number] and dist[0] not in used:
+                d[dist[0].number] = int(dist[1])
+                additional_d[dist[0].number] = int(dist[1])
+                dist[0].previous = current
+        min = 32768
+        appended_node = 0
+        for i in range(len(additional_d)):
+            if additional_d[i] < min:
+                min = additional_d[i]
+                appended_node = i
+        used.append(nodes[appended_node])
+        additional_d[appended_node] = 32768
+    return sum(d)
 
 
 def print_answer(nodes, t):
+    for n in nodes:
+        if n.previous != 0:
+            n.final_next.append(n.previous.number)
+            n.previous.final_next.append(n.number)
     with open("output.txt", "w") as file:
         for node in nodes:
-            node.min_next.sort()
-            node.min_next.append(-1)
-            for n in node.min_next:
+            node.final_next.sort()
+            node.final_next.append(-1)
+            for n in node.final_next:
                 file.write(str(n + 1) + " ")
             file.write("\n")
         file.write(str(t))
